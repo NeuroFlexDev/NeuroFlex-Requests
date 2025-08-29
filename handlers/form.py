@@ -13,6 +13,8 @@ from keyboards import (
     nav_inline, edit_fields_keyboard, remove_kb
 )
 
+from config import settings
+
 # ===== Навигация: назад/вперёд =====
 def _prev_state(cur: Form) -> Form:
     order = [Form.NAME, Form.COMPANY, Form.EMAIL, Form.CONTACT, Form.REQ_TYPE, Form.DESC, Form.FILES, Form.BUDGET, Form.CONFIRM]
@@ -104,6 +106,7 @@ async def ask_for_state(message, context, state: Form):
 
 # ===== старт / черновик =====
 async def form_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.setdefault("lang", settings.DEFAULT_LANG or "ru")
     lang = context.user_data.get("lang", "ru")
     context.user_data["_state"] = Form.NAME
     # авто-черновик
@@ -119,21 +122,24 @@ async def form_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def name_h(update, context):
     context.user_data["_state"] = Form.NAME
     context.user_data["name"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "ask_company"), reply_markup=nav_inline(lang))
     return Form.COMPANY
 
 async def company_h(update, context):
     context.user_data["_state"] = Form.COMPANY
     context.user_data["company"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "ask_email"), reply_markup=nav_inline(lang))
     return Form.EMAIL
 
 async def email_h(update, context):
     context.user_data["_state"] = Form.EMAIL
     val = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     if not validate_email(val):
         await update.message.reply_text(t(lang, "bad_email"), reply_markup=nav_inline(lang))
         return Form.EMAIL
@@ -143,7 +149,8 @@ async def email_h(update, context):
 
 async def contact_h(update, context):
     context.user_data["_state"] = Form.CONTACT
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     if update.message.contact:
         phone = update.message.contact.phone_number
     else:
@@ -161,7 +168,8 @@ async def contact_h(update, context):
 async def reqtype_text(update, context):
     context.user_data["_state"] = Form.REQ_TYPE
     context.user_data["req_type"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "ask_description"), reply_markup=nav_inline(lang))
     return Form.DESC
 
@@ -186,41 +194,47 @@ async def reqtype_cb(update, context):
 async def ai_data_h(update, context):
     context.user_data["_state"] = Form.AI_DATA
     context.user_data["ai_data"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "ai_dataset"), reply_markup=nav_inline(lang))
     return Form.AI_DATASET
 
 async def ai_dataset_h(update, context):
     context.user_data["_state"] = Form.AI_DATASET
     context.user_data["ai_dataset"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "ask_description"), reply_markup=nav_inline(lang))
     return Form.DESC
 
 async def web_auth_h(update, context):
     context.user_data["_state"] = Form.WEB_AUTH
     context.user_data["web_auth"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "web_integrations"), reply_markup=nav_inline(lang))
     return Form.WEB_INTEGRATIONS
 
 async def web_integrations_h(update, context):
     context.user_data["_state"] = Form.WEB_INTEGRATIONS
     context.user_data["web_integrations"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "ask_description"), reply_markup=nav_inline(lang))
     return Form.DESC
 
 async def desc_h(update, context):
     context.user_data["_state"] = Form.DESC
     context.user_data["description"] = update.message.text
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await update.message.reply_text(t(lang, "ask_files") + " " + t(lang, "hint_files"), reply_markup=nav_inline(lang))
     return Form.FILES
 
 async def files_h(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["_state"] = Form.FILES
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     uid = update.effective_user.id
 
     # документы
@@ -285,7 +299,8 @@ async def budget_cb(update, context):
     q = update.callback_query
     _, val = q.data.split(":")
     context.user_data["budget"] = val
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     await q.answer("OK")
     return await preview_and_confirm(q.message, context)
 
@@ -311,7 +326,8 @@ async def preview_and_confirm(target, context):
         await context.bot.send_message(chat_id, "Preview unavailable due to context error.")
         return Form.CONFIRM
 
-    lang = context.user_data["lang"]
+    lang = context.user_data.get("lang", "ru")
+
     p = context.user_data
     preview = t(lang, "preview") + "\n" + "\n".join([
         f"{t(lang, 'f_name')}: {p.get('name', '')}",
