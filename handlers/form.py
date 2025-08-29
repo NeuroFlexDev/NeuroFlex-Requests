@@ -1,4 +1,4 @@
-from telegram import Update
+from telegram import Update, Message
 from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, CommandHandler, CallbackQueryHandler, filters
 from states import Form
 from validators import RequestModel, validate_email, validate_phone
@@ -276,9 +276,10 @@ async def files_h(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return Form.FILES
 
 async def budget_text(update, context):
-    context.user_data["_state"] = Form.BUDGET
-    context.user_data["budget"] = update.message.text
-    return await preview_and_confirm(update, context)
+    context.user_data["_state"]=Form.BUDGET
+    context.user_data["budget"]=update.message.text
+    return await preview_and_confirm(update.message, context)
+
 
 async def budget_cb(update, context):
     q = update.callback_query
@@ -288,7 +289,28 @@ async def budget_cb(update, context):
     await q.answer("OK")
     return await preview_and_confirm(q.message, context)
 
-async def preview_and_confirm(target_message, context):
+from telegram import Message
+
+async def preview_and_confirm(target, context):
+    """
+    Принимает либо Message, либо Update, либо CallbackQuery.message;
+    сам достанет корректный объект Message и вызовет reply_text().
+    """
+    # ---- normalize to Message
+    if isinstance(target, Message):
+        msg = target
+    else:
+        # target может быть Update, CallbackQuery.message, etc.
+        # пробуем вытащить .message или .effective_message
+        msg = getattr(target, "message", None) or getattr(target, "effective_message", None)
+        if msg is None and hasattr(target, "callback_query") and target.callback_query:
+            msg = target.callback_query.message
+    if msg is None:
+        # крайний случай — шлем в личку пользователю
+        chat_id = context._chat_id  # fallback, PTB хранит контекст чата
+        await context.bot.send_message(chat_id, "Preview unavailable due to context error.")
+        return Form.CONFIRM
+
     lang = context.user_data["lang"]
     p = context.user_data
     preview = t(lang, "preview") + "\n" + "\n".join([
@@ -303,11 +325,13 @@ async def preview_and_confirm(target_message, context):
         f"AI dataset: {p.get('ai_dataset', '')}" if p.get("ai_dataset") else "",
         f"Web auth: {p.get('web_auth', '')}" if p.get("web_auth") else "",
         f"Web integrations: {p.get('web_integrations', '')}" if p.get("web_integrations") else "",
-    ])
-    await target_message.reply_text(preview.strip())
-    await target_message.reply_text(t(lang, "edit_hint"), reply_markup=edit_fields_keyboard(lang))
-    await target_message.reply_text(t(lang, "confirm_hint"), reply_markup=confirm_keyboard(lang))
+    ]).strip()
+
+    await msg.reply_text(preview)
+    await msg.reply_text(t(lang, "edit_hint"), reply_markup=edit_fields_keyboard(lang))
+    await msg.reply_text(t(lang, "confirm_hint"), reply_markup=confirm_keyboard(lang))
     return Form.CONFIRM
+
 
 # ===== точечное редактирование =====
 async def edit_cb(update, context):
@@ -338,18 +362,16 @@ async def edit_cb(update, context):
     return Form.EDIT_FIELD
 
 async def edit_field_h(update, context):
-    lang = context.user_data["lang"]
-    field = context.user_data.get("_edit_field")
+    lang=context.user_data["lang"]; field=context.user_data.get("_edit_field")
     val = update.message.text
     if field == "email" and not validate_email(val):
-        await update.message.reply_text(t(lang, "bad_email"))
-        return Form.EDIT_FIELD
+        await update.message.reply_text(t(lang,"bad_email")); return Form.EDIT_FIELD
     if field == "contact" and not validate_phone(val):
-        await update.message.reply_text(t(lang, "bad_phone"))
-        return Form.EDIT_FIELD
+        await update.message.reply_text(t(lang,"bad_phone")); return Form.EDIT_FIELD
     context.user_data[field] = val
-    await update.message.reply_text(t(lang, "field_updated"))
-    return await preview_and_confirm(update, context)
+    await update.message.reply_text(t(lang,"field_updated"))
+    return await preview_and_confirm(update.message, context)
+
 
 # ===== подтверждение =====
 async def confirm_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
