@@ -7,6 +7,18 @@ def lang_keyboard():
          InlineKeyboardButton("🇬🇧 English", callback_data="lang:en")]
     ])
 
+def main_menu_inline(lang: str):
+    t = {
+        "ru": {"form":"📝 Оставить заявку","calc":"💸 Калькулятор","lang":"🌐 Язык","help":"❓ Помощь"},
+        "en": {"form":"📝 Submit Request","calc":"💸 Estimator","lang":"🌐 Language","help":"❓ Help"}
+    }[lang if lang in ("ru","en") else "en"]
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(t["form"], callback_data="menu:form"),
+         InlineKeyboardButton(t["calc"], callback_data="menu:calc")],
+        [InlineKeyboardButton(t["lang"], callback_data="menu:lang"),
+         InlineKeyboardButton(t["help"], callback_data="menu:help")]
+    ])
+
 def nav_inline(lang: str):
     t = {
         "ru": ("⬅️ Назад","⏭ Пропустить","💾 Сохранить черновик"),
