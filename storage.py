@@ -45,9 +45,31 @@ CREATE TABLE IF NOT EXISTS drafts (
 );
 """
 
+def _apply_migrations(c: sqlite3.Connection):
+    # ---- requests: добавляем недостающие колонки
+    cur = c.execute("PRAGMA table_info(requests)")
+    cols = {row[1] for row in cur.fetchall()}  # set of column names
+    alters = []
+    if "ai_data" not in cols:
+        alters.append("ALTER TABLE requests ADD COLUMN ai_data TEXT")
+    if "ai_dataset" not in cols:
+        alters.append("ALTER TABLE requests ADD COLUMN ai_dataset TEXT")
+    if "web_auth" not in cols:
+        alters.append("ALTER TABLE requests ADD COLUMN web_auth TEXT")
+    if "web_integrations" not in cols:
+        alters.append("ALTER TABLE requests ADD COLUMN web_integrations TEXT")
+
+    # тут же можно добавить будущие эволюции схемы по аналогии
+
+    for sql in alters:
+        c.execute(sql)
+    if alters:
+        c.commit()
+
 def _conn():
     c = sqlite3.connect(DB_PATH)
     c.executescript(DDL)
+    _apply_migrations(c)  # <— ВАЖНО: применяем миграции на каждой инициализации
     return c
 
 def save_request(d: dict) -> int:
