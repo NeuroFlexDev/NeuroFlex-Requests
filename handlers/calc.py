@@ -123,7 +123,6 @@ def setup(app):
         },
         fallbacks=[CommandHandler("calc", calc_start)],
         allow_reentry=True,
-        per_message=True,   # ← ДОБАВЬ ЭТО
 
     )
     app.add_handler(conv)

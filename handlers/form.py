@@ -184,7 +184,6 @@ def setup(app):
     },
     fallbacks=[CommandHandler("form", form_start)],
     allow_reentry=True,
-    per_message=True,   # ← ДОБАВЬ ЭТО
 
     )
 
