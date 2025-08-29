@@ -1,7 +1,7 @@
 # bot.py
 from telegram.ext import Application
 from logging_conf import setup_logging
-from handlers import start as h_start, form as h_form, admin as h_admin, errors as h_err, calc as h_calc, menu as h_menu
+from handlers import start as h_start, form as h_form, admin as h_admin, errors as h_err, calc as h_calc, menu as h_menu, admin_menu as h_admin_menu
 from config import settings
 
 def main():
@@ -14,6 +14,7 @@ def main():
     h_admin.setup(app)
     h_calc.setup(app)
     h_menu.setup(app)
+    h_admin_menu.setup(app)
     app.add_error_handler(h_err.error_handler)
 
     # ВАЖНО: webhook не трогаем вручную.

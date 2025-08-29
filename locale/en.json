@@ -36,7 +36,23 @@
     "goto_calc": "Opening the estimator.",
     "attach_hint": "Attach files in this chat — they will be linked to your request.",
     "choose_req_type": "Choose request type:",
-    "or_choose_budget": "Or choose your budget via buttons:"
+    "or_choose_budget": "Or choose your budget via buttons:",
+
+    "back_step": "Moved back. Continue.",
+    "skipped": "Skipped.",
+    "draft_saved": "Draft saved 💾",
+    "draft_found": "Found your draft. Resuming where you left off.",
+    "bad_email": "Looks like an invalid email. Please enter again.",
+    "bad_phone": "Contact looks invalid. Please send phone or @tg again.",
+    "edit_hint": "Want to tweak something? Tap a field below:",
+    "confirm_hint": "If all good, please confirm submission.",
+    "field_updated": "Field updated. Here's the refreshed preview:",
+    "thanks_id": "Thanks! Request #{id} submitted. We'll contact you.",
+    "file_reject": "File type not allowed. Allowed: PDF, DOCX, XLSX, PNG, JPG.",
+    "ai_data": "Describe your data availability: what exists, where it lives, privacy/access?",
+    "ai_dataset": "Estimate dataset size & quality (volume, classes, annotations).",
+    "web_auth": "Describe authentication (email/OTP/Social/OAuth/SAML etc.).",
+    "web_integrations": "Any external integrations (CRM, payments, analytics, etc.)?"
       
   }
   

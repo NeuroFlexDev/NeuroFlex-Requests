@@ -7,42 +7,54 @@ def lang_keyboard():
          InlineKeyboardButton("🇬🇧 English", callback_data="lang:en")]
     ])
 
-def confirm_keyboard(lang: str):
-    yes = "Да" if lang == "ru" else "Yes"
-    no = "Нет" if lang == "ru" else "No"
-    return InlineKeyboardMarkup([[InlineKeyboardButton(yes, callback_data="confirm:yes"),
-                                  InlineKeyboardButton(no, callback_data="confirm:no")]])
-
-def main_menu_inline(lang: str):
+def nav_inline(lang: str):
     t = {
-        "ru": {"form":"📝 Оставить заявку","calc":"💸 Калькулятор","lang":"🌐 Язык","help":"❓ Помощь"},
-        "en": {"form":"📝 Submit Request","calc":"💸 Estimator","lang":"🌐 Language","help":"❓ Help"}
+        "ru": ("⬅️ Назад","⏭ Пропустить","💾 Сохранить черновик"),
+        "en": ("⬅️ Back","⏭ Skip","💾 Save draft")
     }[lang if lang in ("ru","en") else "en"]
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton(t["form"], callback_data="menu:form"),
-         InlineKeyboardButton(t["calc"], callback_data="menu:calc")],
-        [InlineKeyboardButton(t["lang"], callback_data="menu:lang"),
-         InlineKeyboardButton(t["help"], callback_data="menu:help")]
-    ])
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton(t[0], callback_data="nav:back"),
+        InlineKeyboardButton(t[1], callback_data="nav:skip")
+    ],[
+        InlineKeyboardButton(t[2], callback_data="nav:save")
+    ]])
+
+def confirm_keyboard(lang: str):
+    yes = "✅ Подтвердить" if lang=="ru" else "✅ Confirm"
+    no  = "❌ Отменить" if lang=="ru" else "❌ Cancel"
+    return InlineKeyboardMarkup([[InlineKeyboardButton(yes, callback_data="confirm:yes"),
+                                  InlineKeyboardButton(no,  callback_data="confirm:no")]])
+
+def edit_fields_keyboard(lang: str):
+    labels = {
+      "ru":[("Имя","name"),("Компания","company"),("Email","email"),("Контакт","contact"),
+            ("Тип","req_type"),("Описание","description"),("Бюджет","budget"),("Файлы","files")],
+      "en":[("Name","name"),("Company","company"),("Email","email"),("Contact","contact"),
+            ("Type","req_type"),("Description","description"),("Budget","budget"),("Files","files")]
+    }[lang if lang in ("ru","en") else "en"]
+    rows = []
+    for i in range(0, len(labels), 2):
+        pair = labels[i:i+2]
+        rows.append([InlineKeyboardButton(f"{txt}", callback_data=f"edit:{key}") for txt,key in pair])
+    rows.append([InlineKeyboardButton("✅ Done" if lang!="ru" else "✅ Готово", callback_data="edit:done")])
+    return InlineKeyboardMarkup(rows)
 
 def reqtype_inline(lang: str):
     if lang == "ru":
         rows = [
-            [InlineKeyboardButton("🤝 Партнёрство", callback_data="req:Партнёрство")],
-            [InlineKeyboardButton("🧠 AI-проект", callback_data="req:AI-проект")],
-            [InlineKeyboardButton("👁️ CV/детекция", callback_data="req:Компьютерное зрение")],
-            [InlineKeyboardButton("🌐 Web-продукт", callback_data="req:Web-продукт")],
-            [InlineKeyboardButton("🔬 R&D / Консалтинг", callback_data="req:R&D")],
-            [InlineKeyboardButton("Другое", callback_data="req:Другое")]
+            [InlineKeyboardButton("🧠 AI-проект", callback_data="req:AI")],
+            [InlineKeyboardButton("🌐 Web-продукт", callback_data="req:WEB")],
+            [InlineKeyboardButton("👁️ CV/детекция", callback_data="req:CV")],
+            [InlineKeyboardButton("🔬 R&D / Консалтинг", callback_data="req:RND")],
+            [InlineKeyboardButton("🤝 Партнёрство", callback_data="req:PRTN"), InlineKeyboardButton("Другое", callback_data="req:OTHER")]
         ]
     else:
         rows = [
-            [InlineKeyboardButton("🤝 Partnership", callback_data="req:Partnership")],
-            [InlineKeyboardButton("🧠 AI Project", callback_data="req:AI Project")],
-            [InlineKeyboardButton("👁️ CV/Detection", callback_data="req:Computer Vision")],
-            [InlineKeyboardButton("🌐 Web Product", callback_data="req:Web Product")],
-            [InlineKeyboardButton("🔬 R&D / Consulting", callback_data="req:R&D")],
-            [InlineKeyboardButton("Other", callback_data="req:Other")]
+            [InlineKeyboardButton("🧠 AI Project", callback_data="req:AI")],
+            [InlineKeyboardButton("🌐 Web Product", callback_data="req:WEB")],
+            [InlineKeyboardButton("👁️ CV/Detection", callback_data="req:CV")],
+            [InlineKeyboardButton("🔬 R&D / Consulting", callback_data="req:RND")],
+            [InlineKeyboardButton("🤝 Partnership", callback_data="req:PRTN"), InlineKeyboardButton("Other", callback_data="req:OTHER")]
         ]
     return InlineKeyboardMarkup(rows)
 
@@ -76,3 +88,20 @@ def contact_keyboard(lang: str):
 
 def remove_kb():
     return ReplyKeyboardRemove()
+
+# ==== Admin inline ====
+def admin_menu():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("📊 Статистика", callback_data="adm:stats"),
+         InlineKeyboardButton("🗂 Последние", callback_data="adm:latest:0")],
+        [InlineKeyboardButton("🔎 Поиск", callback_data="adm:find"),
+         InlineKeyboardButton("📤 Экспорт", callback_data="adm:export")],
+        [InlineKeyboardButton("🗓 План встречи", callback_data="adm:schedule")]
+    ])
+
+def pager(prefix: str, page: int, has_prev: bool, has_next: bool):
+    row = []
+    if has_prev: row.append(InlineKeyboardButton("⬅️", callback_data=f"{prefix}:{page-1}"))
+    row.append(InlineKeyboardButton(f"{page+1}", callback_data="noop"))
+    if has_next: row.append(InlineKeyboardButton("➡️", callback_data=f"{prefix}:{page+1}"))
+    return InlineKeyboardMarkup([row]) if row else None
